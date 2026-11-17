@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101d2d">
+<title>PCI Inteligente | Inspección de pavimentos</title>
+<style>
+:root{
+ --bg:#f3f6f8;--surface:#fff;--ink:#182536;--muted:#6b7a8d;--line:#e2e8ee;
+ --navy:#101d2d;--navy2:#17283c;--teal:#0e9388;--teal-soft:#e8f5f3;
+ --amber:#e7a34b;--amber-soft:#fff4e5;--red:#cf5e62;--blue:#4e86b9;
+ --shadow:0 8px 28px rgba(18,38,58,.07);--radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,Segoe UI,system-ui,-apple-system,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}
+.sidebar{background:var(--navy);color:#eaf0f5;padding:25px 17px;display:flex;flex-direction:column;gap:28px}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px}
+.brand-mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#22b6a5,#0b756e);display:grid;place-items:center;color:white;font-size:21px;font-weight:900;box-shadow:0 7px 18px #0e938844}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:.02em}
+.brand-sub{font-size:10px;color:#9eb1c2;letter-spacing:.14em;text-transform:uppercase}
+.nav-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#8295a8;font-weight:800;padding:0 11px;margin-bottom:7px}
+.nav{display:grid;gap:5px}
+.nav a{display:flex;align-items:center;gap:11px;text-decoration:none;color:#bdcbd7;padding:11px 12px;border-radius:10px;font-size:13px;font-weight:650}
+.nav a .ico{width:20px;text-align:center;font-size:16px}
+.nav a.active,.nav a:hover{background:#20364b;color:white}
+.nav a.active{box-shadow:inset 3px 0 #26b6a6}
+.sidebar-foot{margin-top:auto;border-top:1px solid #2b3c4e;padding:16px 9px 0;color:#8fa2b4;font-size:11px}
+.sidebar-foot strong{display:block;color:#dce6ed;font-size:12px;margin-bottom:4px}
+.main{min-width:0}
+.topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,42px);gap:15px}
+.crumb{color:var(--muted);font-size:12px}
+.crumb b{color:var(--ink)}
+.top-actions{display:flex;align-items:center;gap:9px}
+.status-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);padding:7px 10px;border-radius:30px;color:var(--muted);font-size:11px;font-weight:700;background:#fff}
+.dot{width:7px;height:7px;border-radius:50%;background:#c3ccd4}
+.dot.ok{background:#1eaa78;box-shadow:0 0 0 3px #1eaa781a}
+.page{max-width:1440px;margin:auto;padding:28px clamp(16px,3vw,42px) 48px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px}
+.eyebrow{font-size:10px;color:var(--teal);font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+h1{font-size:clamp(25px,3vw,34px);letter-spacing:-.035em;line-height:1.12;margin:7px 0 8px;color:var(--navy)}
+.lead{color:var(--muted);max-width:720px;margin:0;font-size:13px}
+.btn{border:1px solid transparent;border-radius:10px;padding:10px 14px;font-weight:750;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+.btn-primary{background:var(--teal);color:#fff;box-shadow:0 5px 13px #0e93882b}
+.btn-primary:hover{background:#0b7e75;transform:translateY(-1px)}
+.btn-dark{background:var(--navy);color:#fff}
+.btn-light{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.grid{display:grid;gap:15px}
+.kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 17px;box-shadow:var(--shadow);display:flex;align-items:center;gap:13px;min-width:0}
+.kpi-icon{width:39px;height:39px;flex:none;border-radius:12px;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-size:18px}
+.kpi:nth-child(2) .kpi-icon{background:#eef3fa;color:var(--blue)}
+.kpi:nth-child(3) .kpi-icon{background:var(--amber-soft);color:#b77720}
+.kpi:nth-child(4) .kpi-icon{background:#fceced;color:var(--red)}
+.kpi-label{font-size:11px;color:var(--muted);font-weight:650}
+.kpi-value{font-size:22px;font-weight:850;line-height:1.2;color:var(--navy);margin-top:2px}
+.kpi-note{font-size:10px;color:#8a98a7}
+.workspace{grid-template-columns:minmax(0,1.55fr) minmax(300px,.8fr);align-items:stretch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid #edf1f4}
+.panel-title{font-size:15px;font-weight:850;color:var(--navy);margin:0}
+.panel-sub{font-size:11px;color:var(--muted);margin:3px 0 0}
+.step{font-size:10px;font-weight:850;color:var(--teal);background:var(--teal-soft);border-radius:20px;padding:5px 9px;white-space:nowrap}
+.work-body{padding:17px 19px 20px}
+.dropzone{border:1.5px dashed #b9c9d2;border-radius:14px;background:#f8fbfc;min-height:160px;display:grid;place-items:center;text-align:center;padding:22px;transition:.15s;cursor:pointer}
+.dropzone:hover,.dropzone.drag{border-color:var(--teal);background:#f0faf8}
+.drop-icon{width:45px;height:45px;background:#e4f3f1;color:var(--teal);border-radius:13px;display:grid;place-items:center;font-size:22px;margin:0 auto 9px}
+.dropzone strong{display:block;font-size:13px;color:var(--navy)}
+.dropzone p{font-size:11px;color:var(--muted);margin:4px 0 10px}
+.dropzone input{display:none}
+.file-hint{font-size:10px;color:#91a0ad}
+.preview-wrap{position:relative;background:#101820;border-radius:13px;overflow:hidden;min-height:270px;display:grid;place-items:center}
+#resultCanvas{display:block;max-width:100%;max-height:560px;width:auto;height:auto;object-fit:contain}
+.preview-placeholder{color:#a7b4bf;text-align:center;padding:35px;font-size:12px}
+.preview-placeholder .big{font-size:36px;display:block;margin-bottom:8px;opacity:.65}
+.image-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 0}
+.file-name{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.toolbar-actions{display:flex;gap:7px;flex-wrap:wrap}
+.conf-row{display:flex;align-items:center;gap:10px;margin-top:13px}
+.conf-row label{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+.conf-row input{flex:1;accent-color:var(--teal)}
+.conf-val{font-size:11px;font-weight:850;color:var(--teal);min-width:36px;text-align:right}
+.result-panel{display:flex;flex-direction:column}
+.result-body{padding:17px 18px;display:grid;gap:15px}
+.model-state{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;background:#f6f9fb;border-radius:10px;font-size:11px}
+.model-state strong{color:var(--navy)}
+.model-state span{color:var(--muted)}
+.damage-list{display:grid;gap:8px}
+.damage-item{display:grid;grid-template-columns:11px minmax(0,1fr) 35px;gap:9px;align-items:center;padding:10px;border:1px solid #edf1f4;border-radius:10px}
+.damage-color{width:10px;height:30px;border-radius:5px}
+.damage-name{font-size:11px;font-weight:750;color:var(--ink)}
+.damage-code{font-size:9px;color:var(--muted);margin-top:1px}
+.damage-count{font-size:18px;font-weight:850;color:var(--navy);text-align:right}
+.empty-results{padding:19px 12px;text-align:center;color:var(--muted);font-size:11px;background:#f8fafb;border-radius:10px}
+.result-total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px;font-size:11px;color:var(--muted)}
+.result-total strong{font-size:20px;color:var(--navy)}
+.detect-table{width:100%;border-collapse:collapse;font-size:10px}
+.detect-table th,.detect-table td{text-align:left;padding:8px 6px;border-bottom:1px solid #edf1f4}
+.detect-table th{color:var(--muted);font-weight:750;background:#f8fafb}
+.detect-table td{color:var(--ink)}
+.table-scroll{max-height:190px;overflow:auto}
+.section-grid{grid-template-columns:1fr 1fr;margin-top:16px}
+.section-card{padding:19px 20px}
+.section-card h2{font-size:15px;margin:0 0 5px;color:var(--navy)}
+.section-card .desc{font-size:11px;color:var(--muted);margin:0 0 14px}
+.class-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.class-mini{border:1px solid var(--line);border-radius:11px;padding:11px}
+.class-mini-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.swatch{width:9px;height:9px;border-radius:3px}
+.class-mini strong{font-size:11px}
+.class-mini p{font-size:10px;color:var(--muted);margin:0;line-height:1.4}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:grid;gap:4px}
+.field label{font-size:10px;color:var(--muted);font-weight:750}
+.field input,.field select{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;color:var(--ink);font-size:11px;min-width:0}
+.field input:focus,.field select:focus{outline:2px solid #b9e4df;border-color:var(--teal)}
+.measure-table{width:100%;border-collapse:collapse;font-size:10px}
+.measure-table th,.measure-table td{padding:7px 5px;text-align:left;border-bottom:1px solid #edf1f4}
+.measure-table th{font-size:9px;color:var(--muted);background:#f8fafb}
+.measure-table input,.measure-table select{width:100%;min-width:55px;border:1px solid var(--line);border-radius:6px;padding:6px;font:inherit;color:var(--ink);background:white}
+.pci-box{background:var(--navy);color:#fff;border-radius:13px;padding:15px;margin-top:13px}
+.pci-box .small{font-size:10px;color:#aebdca}
+.pci-value{font-size:34px;font-weight:900;line-height:1.2;margin:3px 0}
+.pci-status{display:inline-block;font-size:10px;font-weight:800;padding:4px 8px;border-radius:20px;background:#2b4154;color:#e8f5f3}
+.pci-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.notice{font-size:10px;color:#85652e;background:#fff7e8;border:1px solid #f5e5c8;padding:10px 11px;border-radius:9px;margin-top:12px;line-height:1.5}
+.method{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.method-step{padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.method-num{width:23px;height:23px;border-radius:8px;background:var(--teal-soft);color:var(--teal);font-size:11px;font-weight:900;display:grid;place-items:center;margin-bottom:8px}
+.method-step strong{font-size:11px;display:block;margin-bottom:3px}
+.method-step p{font-size:10px;color:var(--muted);margin:0}
+.footer{margin-top:22px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#8997a5;font-size:10px}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--navy);color:white;padding:11px 15px;border-radius:10px;font-size:12px;box-shadow:var(--shadow);display:none;z-index:30}
+.toast.show{display:block}
+@media(max-width:1100px){.app{grid-template-columns:205px minmax(0,1fr)}.workspace{grid-template-columns:1fr}.result-panel{min-height:0}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{display:none}.topbar{height:56px}.page-head{display:block}.page-head .btn{margin-top:14px}.section-grid{grid-template-columns:1fr}.method{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.kpis{grid-template-columns:1fr 1fr}.kpi{padding:12px}.kpi-value{font-size:19px}.class-grid,.field-grid{grid-template-columns:1fr}.method{grid-template-columns:1fr}.page{padding:18px 12px 32px}.panel-head{padding:15px}.work-body{padding:13px}.result-body{padding:13px}}
+@media print{.sidebar,.topbar,.dropzone,.toolbar-actions,.conf-row,.btn,.toast{display:none!important}.app{display:block}.page{padding:0}.panel,.kpi{box-shadow:none;break-inside:avoid}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="sidebar">
+  <div class="brand">
+   <div class="brand-mark">⌁</div>
+   <div><div class="brand-name">PCI INTELIGENTE</div><div class="brand-sub">Inspección vial asistida</div></div>
+  </div>
+  <div>
+   <div class="nav-label">Módulos del proyecto</div>
+   <nav class="nav">
+    <a href="#inspeccion" class="active"><span class="ico">▣</span>Inspección visual</a>
+    <a href="#resultados"><span class="ico">⌗</span>Resultados de IA</a>
+    <a href="#registro"><span class="ico">▤</span>Registro de deterioros</a>
+    <a href="#pci"><span class="ico">◉</span>Evaluación PCI</a>
+    <a href="#metodologia"><span class="ico">⌘</span>Metodología</a>
+   </nav>
+  </div>
+  <div>
+   <div class="nav-label">Clasificación</div>
+   <div class="nav">
+    <a href="#clases"><span class="ico">◈</span>Catálogo de fallas</a>
+   </div>
+  </div>
+  <div class="sidebar-foot">
+   <strong>Proyecto académico · Ingeniería Civil</strong>
+   Inteligencia artificial aplicada a la evaluación de pavimentos flexibles.
+  </div>
+ </aside>
+
+ <div class="main">
+  <div class="topbar">
+   <div class="crumb">Proyectos / Pavimentos / <b>Inspección inteligente</b></div>
+   <div class="top-actions">
+    <span class="status-pill"><span class="dot" id="modelDot"></span><span id="modelStatus">Motor IA sin iniciar</span></span>
+    <button class="btn btn-primary" id="loadModelBtn">Activar modelo IA</button>
+   </div>
+  </div>
+
+  <main class="page">
+   <div class="page-head">
+    <div>
+     <div class="eyebrow">Sistema de apoyo a la inspección de carreteras</div>
+     <h1>Evaluación inteligente del estado del pavimento</h1>
+     <p class="lead">Carga una fotografía de la vía, identifica posibles deterioros con visión artificial y organiza la información técnica necesaria para una posterior evaluación del Índice de Condición del Pavimento (PCI).</p>
+    </div>
+    <button class="btn btn-light" id="printBtn">⇩ Exportar ficha / PDF</button>
+   </div>
+
+   <section class="grid kpis">
+    <div class="kpi"><div class="kpi-icon">⌁</div><div><div class="kpi-label">Modelo de detección</div><div class="kpi-value" id="kModel">YOLO11n</div><div class="kpi-note">Modelo de referencia RDD2022</div></div></div>
+    <div class="kpi"><div class="kpi-icon">▧</div><div><div class="kpi-label">Imágenes analizadas</div><div class="kpi-value" id="kImages">0</div><div class="kpi-note">En esta sesión</div></div></div>
+    <div class="kpi"><div class="kpi-icon">⌗</div><div><div class="kpi-label">Deterioros detectados</div><div class="kpi-value" id="kDetections">0</div><div class="kpi-note">Predicciones del modelo</div></div></div>
+    <div class="kpi"><div class="kpi-icon">◉</div><div><div class="kpi-label">Índice PCI</div><div class="kpi-value" id="kPCI">Pendiente</div><div class="kpi-note">Requiere datos de campo y CDV</div></div></div>
+   </section>
+
+   <section class="grid workspace" id="inspeccion">
+    <div class="panel">
+     <div class="panel-head">
+      <div><h2 class="panel-title">01 · Inspección visual con inteligencia artificial</h2><p class="panel-sub">Carga una imagen del pavimento para iniciar el análisis automatizado.</p></div>
+      <span class="step">ANÁLISIS DE IMAGEN</span>
+     </div>
+     <div class="work-body">
+      <label class="dropzone" id="dropzone" for="imageInput">
+       <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp">
+       <div>
+        <div class="drop-icon">↑</div>
+        <strong>Arrastra una fotografía o haz clic para seleccionarla</strong>
+        <p>Formatos JPG, PNG o WEBP · La imagen se procesa en tu navegador</p>
+        <span class="btn btn-light">Seleccionar fotografía</span>
+        <div class="file-hint">Recomendación: fotografía clara, enfocada y tomada a nivel de la superficie vial.</div>
+       </div>
+      </label>
+      <div id="previewArea" class="hidden" style="margin-top:13px">
+       <div class="preview-wrap">
+        <canvas id="resultCanvas"></canvas>
+        <div class="preview-placeholder" id="canvasPlaceholder"><span class="big">▧</span>La imagen analizada aparecerá aquí.</div>
+       </div>
+       <div class="image-toolbar">
+        <div class="file-name" id="fileName">Sin imagen seleccionada</div>
+        <div class="toolbar-actions">
+         <button class="btn btn-light" id="clearBtn">Quitar imagen</button>
+         <button class="btn btn-primary" id="analyzeBtn" disabled>⌕ Analizar fotografía</button>
+        </div>
+       </div>
+       <div class="conf-row">
+        <label for="confidence">Confianza mínima</label>
+        <input id="confidence" type="range" min="0.05" max="0.85" step="0.05" value="0.25">
+        <span class="conf-val" id="confidenceValue">25%</span>
+       </div>
+      </div>
+      <div class="notice" id="modelNotice">Para iniciar el análisis, activa el modelo IA desde la parte superior. La primera carga descarga aproximadamente 10 MB de pesos del modelo.</div>
+     </div>
+    </div>
+
+    <aside class="panel result-panel" id="resultados">
+     <div class="panel-head">
+      <div><h2 class="panel-title">02 · Resultados de detección</h2><p class="panel-sub">Clasificación automática de los deterioros encontrados.</p></div>
+      <span class="step">SALIDA YOLO</span>
+     </div>
+     <div class="result-body">
+      <div class="model-state"><div><strong id="inferenceState">Esperando imagen</strong><br><span id="inferenceTime">Sin análisis ejecutado</span></div><span class="pill" id="resultPill">0 hallazgos</span></div>
+      <div class="damage-list" id="damageList">
+       <div class="empty-results">Carga una fotografía y ejecuta el análisis para visualizar aquí las fallas detectadas.</div>
+      </div>
+      <div class="result-total"><span>Total de detecciones</span><strong id="totalCount">0</strong></div>
+      <div class="table-scroll">
+       <table class="detect-table">
+        <thead><tr><th>#</th><th>Tipo de falla</th><th>Confianza</th></tr></thead>
+        <tbody id="detectionRows"><tr><td colspan="3" style="color:#8a98a7">Aún no hay resultados.</td></tr></tbody>
+       </table>
+      </div>
+      <div class="toolbar-actions">
+       <button class="btn btn-light" id="downloadImageBtn" disabled>Descargar imagen marcada</button>
+       <button class="btn btn-light" id="downloadCsvBtn" disabled>Descargar resultados CSV</button>
+      </div>
+     </div>
+    </aside>
+   </section>
+
+   <section class="grid section-grid" id="clases">
+    <div class="panel section-card">
+     <h2>03 · Catálogo de deterioros identificables</h2>
+     <p class="desc">Clases incluidas en el modelo de referencia basado en RDD2022.</p>
+     <div class="class-grid">
+      <div class="class-mini"><div class="class-mini-top"><span class="swatch" style="background:#38bdf8"></span><strong>Fisura longitudinal</strong></div><p><b>D00</b> · Grieta aproximadamente paralela al eje de la vía.</p></div>
+      <div class="class-mini"><div class="class-mini-top"><span class="swatch" style="background:#c084fc"></span><strong>Fisura transversal</strong></div><p><b>D10</b> · Grieta que cruza transversalmente la superficie.</p></div>
+      <div class="class-mini"><div class="class-mini-top"><span class="swatch" style="background:#4ade80"></span><strong>Piel de cocodrilo</strong></div><p><b>D20</b> · Red de fisuras interconectadas en forma de polígonos.</p></div>
+      <div class="class-mini"><div class="class-mini-top"><span class="swatch" style="background:#f87171"></span><strong>Bache</strong></div><p><b>D40</b> · Pérdida localizada de material que forma un hueco.</p></div>
+     </div>
+    </div>
+
+    <div class="panel section-card" id="registro">
+     <h2>04 · Datos de la unidad de muestra</h2>
+     <p class="desc">Completa los datos de campo para documentar la inspección. La IA no obtiene estos datos solo de una fotografía.</p>
+     <div class="field-grid">
+      <div class="field"><label for="roadName">Vía / carretera</label><input id="roadName" placeholder="Ej. Av. Municipalidad"></div>
+      <div class="field"><label for="sampleId">Código de muestra</label><input id="sampleId" placeholder="Ej. UM-01"></div>
+      <div class="field"><label for="location">Ubicación / progresiva</label><input id="location" placeholder="Ej. Km 0+000 – 0+100"></div>
+      <div class="field"><label for="pavementType">Tipo de pavimento</label><select id="pavementType"><option value="flexible">Flexible (asfalto)</option><option value="rigid">Rígido (concreto)</option></select></div>
+      <div class="field"><label for="sampleArea">Área de la unidad de muestra (m²)</label><input id="sampleArea" type="number" min="0" step="0.01" placeholder="Ej. 230"></div>
+      <div class="field"><label for="inspectionDate">Fecha de inspección</label><input id="inspectionDate" type="date"></div>
+     </div>
+     <div style="margin-top:14px;font-size:11px;font-weight:800;color:var(--navy)">Mediciones verificadas en campo</div>
+     <p class="desc" style="margin:3px 0 8px">Registra cantidad y severidad después de revisar físicamente cada deterioro.</p>
+     <div style="overflow-x:auto">
+      <table class="measure-table">
+       <thead><tr><th>Deterioro</th><th>Severidad</th><th>Cantidad medida</th><th>Unidad</th></tr></thead>
+       <tbody>
+        <tr><td>D00 · Longitudinal</td><td><select id="sevD00"><option value="">—</option><option>Baja</option><option>Media</option><option>Alta</option></select></td><td><input id="qtyD00" type="number" min="0" step="0.01" placeholder="0"></td><td>m</td></tr>
+        <tr><td>D10 · Transversal</td><td><select id="sevD10"><option value="">—</option><option>Baja</option><option>Media</option><option>Alta</option></select></td><td><input id="qtyD10" type="number" min="0" step="0.01" placeholder="0"></td><td>m</td></tr>
+        <tr><td>D20 · Cocodrilo</td><td><select id="sevD20"><option value="">—</option><option>Baja</option><option>Media</option><option>Alta</option></select></td><td><input id="qtyD20" type="number" min="0" step="0.01" placeholder="0"></td><td>m²</td></tr>
+        <tr><td>D40 · Bache</td><td><select id="sevD40"><option value="">—</option><option>Baja</option><option>Media</option><option>Alta</option></select></td><td><input id="qtyD40" type="number" min="0" step="1" placeholder="0"></td><td>und.</td></tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </section>
+
+   <section class="panel section-card section" id="pci">
+    <h2>05 · Hoja de evaluación del Índice PCI</h2>
+    <p class="desc">El índice PCI se obtiene a partir del procedimiento normativo y de los valores de deducción correspondientes a los deterioros medidos.</p>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(250px,.7fr);align-items:end;gap:16px">
+     <div>
+      <div class="field" style="max-width:360px"><label for="cdv">Valor de deducción corregido (CDV), obtenido con el procedimiento ASTM D6433</label><input id="cdv" type="number" min="0" max="100" step="0.1" placeholder="Ingresa el CDV validado"></div>
+      <div class="notice">El CDV debe determinarse usando los valores de deducción y las curvas/tablas del procedimiento ASTM D6433, con severidad y densidad verificadas. No se estima automáticamente a partir del número de recuadros de IA.</div>
+      <div class="pci-actions"><button class="btn btn-primary" id="calcPciBtn">Calcular PCI con CDV</button><button class="btn btn-light" id="clearPciBtn">Limpiar cálculo</button></div>
+     </div>
+     <div class="pci-box">
+      <div class="small">ÍNDICE DE CONDICIÓN DEL PAVIMENTO</div>
+      <div class="pci-value" id="pciValue">—</div>
+      <span class="pci-status" id="pciRating">Pendiente de evaluación</span>
+      <div class="small" style="margin-top:8px">PCI = 100 − CDV corregido</div>
+     </div>
+    </div>
+   </section>
+
+   <section class="panel section-card section" id="metodologia">
+    <h2>06 · Flujo de trabajo del proyecto</h2>
+    <p class="desc">La inteligencia artificial apoya la inspección; el criterio del ingeniero y el procedimiento PCI completan la evaluación.</p>
+    <div class="method">
+     <div class="method-step"><div class="method-num">1</div><strong>Captura de imagen</strong><p>Se obtiene una fotografía clara de la superficie del pavimento.</p></div>
+     <div class="method-step"><div class="method-num">2</div><strong>Detección con YOLO</strong><p>El modelo identifica posibles fisuras, piel de cocodrilo y baches.</p></div>
+     <div class="method-step"><div class="method-num">3</div><strong>Verificación en campo</strong><p>Se confirma el tipo, severidad y cantidad del deterioro.</p></div>
+     <div class="method-step"><div class="method-num">4</div><strong>Cálculo del PCI</strong><p>Se aplican deducciones y CDV según ASTM D6433.</p></div>
+    </div>
+    <div class="notice" style="margin-top:14px"><b>Limitación del modelo:</b> el modelo de referencia se entrenó con imágenes de carreteras de India (RDD2022). Sus resultados pueden variar en pavimentos de Ica por diferencias de materiales, iluminación, ángulo y condiciones de captura. La fisura transversal es una clase especialmente difícil para este modelo; toda detección debe ser validada por una persona.</div>
+   </section>
+
+   <div class="footer"><span>PCI Inteligente · Prototipo académico de Ingeniería Civil</span><span>Modelo de referencia YOLO11n · Dataset RDD2022 · ASTM D6433 para el procedimiento PCI</span></div>
+  </main>
+ </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script>
+(() => {
+ "use strict";
+ const MODEL_URLS = [
+  "https://cdn.jsdelivr.net/gh/VivekVagale/road-hazard@gh-pages/models/yolo11n.onnx",
+  "https://vivekvagale.github.io/road-hazard/models/yolo11n.onnx"
+ ];
+ const MODEL_PAGE = "https://vivekvagale.github.io/road-hazard/";
+ const SIZE = 640;
+ const CLASSES = [
+  {code:"D00",name:"Fisura longitudinal",short:"Longitudinal",color:"#38bdf8"},
+  {code:"D10",name:"Fisura transversal",short:"Transversal",color:"#c084fc"},
+  {code:"D20",name:"Piel de cocodrilo",short:"Piel de cocodrilo",color:"#4ade80"},
+  {code:"D40",name:"Bache",short:"Bache",color:"#f87171"}
+ ];
+ const $ = id => document.getElementById(id);
+ const state = {session:null,image:null,file:null,detections:[],imagesAnalyzed:0,modelLoading:false};
+ const canvas=$("resultCanvas"),ctx=canvas.getContext("2d");
+ let confidence=.25;
+
+ function toast(message){
+  const el=$("toast");el.textContent=message;el.classList.add("show");
+  clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),3200);
+ }
+ function setModelStatus(text,ok=false){
+  $("modelStatus").textContent=text;
+  $("modelDot").classList.toggle("ok",ok);
+  $("loadModelBtn").disabled=ok||state.modelLoading;
+  if(ok){$("loadModelBtn").textContent="Modelo listo";$("loadModelBtn").classList.add("btn-dark");}
+ }
+ function setInference(text,sub=""){
+  $("inferenceState").textContent=text;$("inferenceTime").textContent=sub;
+ }
+ async function loadModel(){
+  if(state.session||state.modelLoading)return;
+  if(!window.ort){toast("No se pudo cargar ONNX Runtime. Revisa tu conexión a internet.");return;}
+  state.modelLoading=true;setModelStatus("Cargando modelo…");
+  $("loadModelBtn").textContent="Descargando modelo…";
+  $("modelNotice").textContent="Descargando el modelo YOLO11n (aprox. 10 MB). La primera carga puede tardar según tu conexión.";
+  try{
+   ort.env.wasm.wasmPaths="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
+   ort.env.wasm.numThreads=1;
+   let lastError=null;
+   for (const modelUrl of MODEL_URLS) {
+    try {
+     state.session=await ort.InferenceSession.create(modelUrl,{executionProviders:["wasm"]});
+     break;
+    } catch (modelError) {
+     lastError=modelError;
+    }
+   }
+   if (!state.session) throw lastError || new Error("No se pudo descargar el modelo ONNX.");
+   state.modelLoading=false;setModelStatus("Modelo activo",true);
+   $("modelNotice").textContent="Modelo cargado. Selecciona una fotografía y presiona «Analizar fotografía».";
+   $("analyzeBtn").disabled=!state.image;
+   setInference("Modelo listo","Esperando una fotografía");
+   toast("Modelo de inteligencia artificial cargado correctamente.");
+  }catch(err){
+   state.modelLoading=false;
+   setModelStatus("No se pudo cargar");
+   $("loadModelBtn").textContent="Reintentar carga";
+   $("modelNotice").innerHTML='No se pudo descargar el modelo desde las dos direcciones públicas. Comprueba tu conexión, desactiva temporalmente bloqueadores de contenido o abre <a href="'+MODEL_PAGE+'" target="_blank" rel="noopener">la demostración original</a>. Detalle: '+String(err.message||err).replace(/[<>&"]/g,"") ;
+   setInference("Modelo no disponible","No se ejecutó ninguna predicción");
+  }
+ }
+
+ function letterbox(source,w,h){
+  const scale=Math.min(SIZE/w,SIZE/h);
+  const nw=Math.round(w*scale),nh=Math.round(h*scale);
+  const px=Math.floor((SIZE-nw)/2),py=Math.floor((SIZE-nh)/2);
+  const c=document.createElement("canvas");c.width=SIZE;c.height=SIZE;
+  const g=c.getContext("2d",{willReadFrequently:true});
+  g.fillStyle="rgb(114,114,114)";g.fillRect(0,0,SIZE,SIZE);
+  g.drawImage(source,px,py,nw,nh);
+  const data=g.getImageData(0,0,SIZE,SIZE).data;
+  const t=new Float32Array(3*SIZE*SIZE),A=SIZE*SIZE;
+  for(let i=0;i<A;i++){t[i]=data[4*i]/255;t[A+i]=data[4*i+1]/255;t[2*A+i]=data[4*i+2]/255;}
+  return {tensor:new ort.Tensor("float32",t,[1,3,SIZE,SIZE]),scale,px,py};
+ }
+ function iou(a,b){
+  const x1=Math.max(a[0],b[0]),y1=Math.max(a[1],b[1]),x2=Math.min(a[2],b[2]),y2=Math.min(a[3],b[3]);
+  const inter=Math.max(0,x2-x1)*Math.max(0,y2-y1);
+  const areaA=Math.max(0,a[2]-a[0])*Math.max(0,a[3]-a[1]);
+  const areaB=Math.max(0,b[2]-b[0])*Math.max(0,b[3]-b[1]);
+  return inter/Math.max(1e-9,areaA+areaB-inter);
+ }
+ function decode(output,lb,w,h){
+  const dims=output.dims,data=output.data;
+  const rows=dims[1],n=dims[2],boxes=[];
+  for(let i=0;i<n;i++){
+   let best=0,cls=-1;
+   for(let c=4;c<rows;c++){if(data[c*n+i]>best){best=data[c*n+i];cls=c-4;}}
+   if(best<confidence||cls<0||cls>3)continue;
+   const cx=data[i],cy=data[n+i],bw=data[2*n+i],bh=data[3*n+i];
+   const x1=(cx-bw/2-lb.px)/lb.scale,y1=(cy-bh/2-lb.py)/lb.scale;
+   const x2=(cx+bw/2-lb.px)/lb.scale,y2=(cy+bh/2-lb.py)/lb.scale;
+   boxes.push({box:[Math.max(0,x1),Math.max(0,y1),Math.min(w,x2),Math.min(h,y2)],score:best,cls});
+  }
+  boxes.sort((a,b)=>b.score-a.score);
+  const keep=[];
+  for(const box of boxes){
+   if(!keep.some(k=>k.cls===box.cls&&iou(k.box,box.box)>.45))keep.push(box);
+  }
+  return keep;
+ }
+ function drawDetections(image,dets){
+  const w=image.naturalWidth,h=image.naturalHeight;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);ctx.drawImage(image,0,0,w,h);
+  const scale=Math.max(1,w/900),line=Math.max(2,2*scale),font=Math.max(13,14*scale);
+  for(const d of dets){
+   const c=CLASSES[d.cls], [x1,y1,x2,y2]=d.box;
+   ctx.save();ctx.strokeStyle=c.color;ctx.lineWidth=line;
+   ctx.fillStyle=c.color;ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+   const label=`${c.code} · ${Math.round(d.score*100)}%`;
+   ctx.font=`700 ${font}px Segoe UI, sans-serif`;
+   const tw=ctx.measureText(label).width+14,th=font+9,ty=Math.max(0,y1-th);
+   ctx.fillRect(x1,ty,tw,th);ctx.fillStyle="#10202c";ctx.fillText(label,x1+7,ty+font);
+   ctx.restore();
+  }
+  $("canvasPlaceholder").classList.add("hidden");
+ }
+ function renderCounts(dets){
+  const counts=[0,0,0,0];dets.forEach(d=>counts[d.cls]++);
+  $("damageList").innerHTML=CLASSES.map((c,i)=>`
+   <div class="damage-item">
+    <span class="damage-color" style="background:${c.color}"></span>
+    <div><div class="damage-name">${c.name}</div><div class="damage-code">${c.code}</div></div>
+    <div class="damage-count">${counts[i]}</div>
+   </div>`).join("");
+  $("totalCount").textContent=dets.length;
+  $("resultPill").textContent=`${dets.length} hallazgo${dets.length===1?"":"s"}`;
+  $("detectionRows").innerHTML=dets.length?dets.map((d,i)=>`<tr><td>${i+1}</td><td>${CLASSES[d.cls].code} · ${CLASSES[d.cls].name}</td><td>${(d.score*100).toFixed(1)}%</td></tr>`).join(""):'<tr><td colspan="3">No se detectaron objetos sobre el umbral seleccionado.</td></tr>';
+  $("kDetections").textContent=dets.length;
+ }
+ async function analyze(){
+  if(!state.image)return toast("Primero selecciona una fotografía.");
+  if(!state.session)return toast("Primero activa el modelo de inteligencia artificial.");
+  $("analyzeBtn").disabled=true;setInference("Analizando fotografía…","El modelo está procesando la imagen");
+  try{
+   const t0=performance.now(),lb=letterbox(state.image,state.image.naturalWidth,state.image.naturalHeight);
+   const feeds={images:lb.tensor};
+   const outputs=await state.session.run(feeds);
+   const output=outputs.output0||outputs[Object.keys(outputs)[0]];
+   const dets=decode(output,lb,state.image.naturalWidth,state.image.naturalHeight);
+   drawDetections(state.image,dets);state.detections=dets;state.imagesAnalyzed++;
+   $("kImages").textContent=state.imagesAnalyzed;renderCounts(dets);
+   const elapsed=Math.round(performance.now()-t0);
+   setInference("Análisis completado",`${dets.length} detecciones · ${elapsed} ms de inferencia`);
+   $("downloadImageBtn").disabled=false;$("downloadCsvBtn").disabled=false;
+   toast(dets.length?`Análisis terminado: ${dets.length} posibles deterioros.`:"Análisis terminado: no se detectaron fallas sobre el umbral.");
+  }catch(err){
+   setInference("Error durante el análisis",String(err.message||err));
+   toast("No se pudo analizar la imagen. Revisa la consola o prueba otra fotografía.");
+  }finally{$("analyzeBtn").disabled=false;}
+ }
+ function selectFile(file){
+  if(!file)return;
+  if(!file.type.startsWith("image/")){toast("Selecciona una imagen JPG, PNG o WEBP.");return;}
+  if(state.imageUrl)URL.revokeObjectURL(state.imageUrl);
+  state.file=file;state.imageUrl=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+   state.image=img;state.detections=[];
+   $("previewArea").classList.remove("hidden");$("dropzone").classList.add("hidden");
+   $("fileName").textContent=`${file.name} · ${img.naturalWidth} × ${img.naturalHeight} px`;
+   canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;ctx.drawImage(img,0,0);
+   $("canvasPlaceholder").classList.add("hidden");
+   $("analyzeBtn").disabled=!state.session;
+   setInference("Imagen lista",state.session?"Presiona Analizar fotografía":"Activa primero el modelo IA");
+   renderCounts([]);$("downloadImageBtn").disabled=true;$("downloadCsvBtn").disabled=true;
+  };
+  img.onerror=()=>toast("No se pudo abrir la imagen seleccionada.");
+  img.src=state.imageUrl;
+ }
+ function clearImage(){
+  if(state.imageUrl)URL.revokeObjectURL(state.imageUrl);
+  state.image=null;state.file=null;state.detections=[];
+  $("imageInput").value="";$("previewArea").classList.add("hidden");$("dropzone").classList.remove("hidden");
+  $("kDetections").textContent="0";renderCounts([]);setInference("Esperando imagen","Sin análisis ejecutado");
+  $("downloadImageBtn").disabled=true;$("downloadCsvBtn").disabled=true;
+ }
+ function downloadCanvas(){
+  canvas.toBlob(blob=>{
+   if(!blob)return;
+   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="PCI_Inteligente_imagen_analizada.png";a.click();URL.revokeObjectURL(a.href);
+  },"image/png");
+ }
+ function downloadCSV(){
+  const rows=[["N°","Código","Deterioro","Confianza","X1_px","Y1_px","X2_px","Y2_px"]];
+  state.detections.forEach((d,i)=>rows.push([i+1,CLASSES[d.cls].code,CLASSES[d.cls].name,(d.score*100).toFixed(1)+"%",...d.box.map(v=>v.toFixed(1))]));
+  const csv="\ufeff"+rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="PCI_Inteligente_detecciones.csv";a.click();URL.revokeObjectURL(a.href);
+ }
+ function classifyPCI(pci){
+  if(pci>=85)return "Excelente";
+  if(pci>=70)return "Muy bueno";
+  if(pci>=55)return "Bueno";
+  if(pci>=40)return "Regular";
+  if(pci>=25)return "Malo";
+  if(pci>=10)return "Muy malo";
+  return "Fallado";
+ }
+ function calculatePCI(){
+  const raw=$("cdv").value;
+  if(raw===""){toast("Ingresa el CDV corregido obtenido con el procedimiento ASTM D6433.");return;}
+  const cdv=Number(raw);
+  if(!Number.isFinite(cdv)||cdv<0||cdv>100){toast("El CDV debe estar entre 0 y 100.");return;}
+  const pci=Math.max(0,Math.min(100,100-cdv)),rating=classifyPCI(pci);
+  $("pciValue").textContent=pci.toFixed(1);
+  $("pciRating").textContent=rating;
+  $("kPCI").textContent=pci.toFixed(1);
+  toast("PCI calculado a partir del CDV que ingresaste.");
+ }
+ function clearPCI(){
+  $("cdv").value="";$("pciValue").textContent="—";$("pciRating").textContent="Pendiente de evaluación";$("kPCI").textContent="Pendiente";
+ }
+ $("loadModelBtn").addEventListener("click",loadModel);
+ $("imageInput").addEventListener("change",e=>selectFile(e.target.files[0]));
+ $("analyzeBtn").addEventListener("click",analyze);
+ $("clearBtn").addEventListener("click",clearImage);
+ $("downloadImageBtn").addEventListener("click",downloadCanvas);
+ $("downloadCsvBtn").addEventListener("click",downloadCSV);
+ $("confidence").addEventListener("input",e=>{
+  confidence=Number(e.target.value);$("confidenceValue").textContent=Math.round(confidence*100)+"%";
+  if(state.image&&state.session)analyze();
+ });
+ $("dropzone").addEventListener("dragover",e=>{e.preventDefault();$("dropzone").classList.add("drag");});
+ $("dropzone").addEventListener("dragleave",()=> $("dropzone").classList.remove("drag"));
+ $("dropzone").addEventListener("drop",e=>{e.preventDefault();$("dropzone").classList.remove("drag");selectFile(e.dataTransfer.files[0]);});
+ $("calcPciBtn").addEventListener("click",calculatePCI);
+ $("clearPciBtn").addEventListener("click",clearPCI);
+ $("printBtn").addEventListener("click",()=>window.print());
+ $("inspectionDate").value=new Date().toISOString().slice(0,10);
+ document.querySelectorAll(".nav a").forEach(a=>a.addEventListener("click",()=>{
+  document.querySelectorAll(".nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active");
+ }));
+})();
+</script>
+</body>
+</html>
